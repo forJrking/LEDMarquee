@@ -3,10 +3,16 @@ package com.example.surfaceapplication
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.os.Environment
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import com.example.surfaceapplication.oth.MyTextView
+import com.example.surfaceapplication.pic.ImageLoader
 import kotlinx.android.synthetic.main.activity_main_t.*
+import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
+
 
 class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
 
@@ -24,7 +30,7 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
             lineSpacing = 1
             speed = 480f
             height = 480
-            width = 1920/2
+            width = 1920 / 2
             offsetY = 0
             isHeadTail = true
             headTailSpacing = 50
@@ -58,6 +64,20 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
 //            }
 //
 //        }, 2000)
+
+        if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            val dir = Environment.getExternalStorageDirectory()
+            Thread(Runnable {
+                val broadSearch = scanPicture(dir)
+                broadSearch.forEach {
+                    System.out.println(it)
+                }
+            }).start()
+        }
+
+        var str ="/sdcard/nova/viplex_terminal/media/default_colorful_text_texture.png"
+
+        ImageLoader.getInstance().loadImage(str,image)
     }
 
 
@@ -101,5 +121,29 @@ class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
         marqueeTextView.onRelease()
     }
 
+    fun scanPicture(files: File): ArrayList<String> {
+        val arrayList = ArrayList<String>()
+        val myQueue: Queue<File> = LinkedList()
+        myQueue.add(files)
+        while (!myQueue.isEmpty()) {
+            val node: File = myQueue.poll()
+            if (node.isDirectory) {
+                val listFiles = node?.listFiles()
+                if (listFiles != null) {
+                    myQueue.addAll(listFiles)
+                }
+            } else if (node.isFile && isPicture(node.name)) {
+                arrayList.add(node.absolutePath)
+            }
+        }
+        return arrayList
+    }
+
+    fun isPicture(path: String): Boolean {
+        return path.endsWith(".bmp", true)
+                || path.endsWith(".jpg", true)
+                || path.endsWith(".jpeg", true)
+                || path.endsWith(".png", true)
+    }
 
 }
